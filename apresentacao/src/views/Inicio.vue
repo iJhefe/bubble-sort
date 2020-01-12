@@ -13,7 +13,8 @@
                 <input type="number" v-model="delay">
             </div>
             <select name="method" v-model="method">
-                <option value="2" selected  >BubbleSort - 2</option>
+                <option value="1">BubbleSort - 1</option>
+                <option value="2">BubbleSort - 2</option>
                 <option value="3">BubbleSort - 3</option>
             </select>
 
@@ -35,7 +36,15 @@
             <div class="subtitle subtitle-blue"></div> <span>Trocado</span>
         </div>
         <div class="control-panel">
-            <h5>: <span style="font-size: 20px">{{steps}}</span></h5>
+            <h5>Passagens: <span style="font-size: 20px">{{steps}}</span></h5>
+            <div class="vetores">
+                <div class="vetor">
+                    | <span v-for="(curVetor, i) in vetor.inicial" :key="i">{{curVetor + ' | '}}</span>
+                </div>
+                <div class="vetor">
+                   | <span v-for="(curVetor, i) in vetor.final" :key="i">{{curVetor + ' | '}}</span>
+                </div>
+            </div>
             <button v-if="this.$store.state.done" @click="reset">
                 O
             </button>
@@ -57,9 +66,13 @@
             return {
                 items_count: 10,
                 delay: 10,
-                method: 2,
+                method: 1,
                 steps: 0,
-                decimal_base: 10
+                decimal_base: 10,
+                vetor: {
+                    inicial: [],
+                    final: []
+                }
             }
         },
         methods: {
@@ -84,6 +97,10 @@
                     pool.splice(index, 1);
                 }
 
+                values = [10, 9, 8, 7, 6, 1, 2, 3, 4, 5];
+
+                this.vetor.inicial = values.slice();
+
                 this.$store.commit({ type: 'reset', values: values });
 
                 this.method = parseInt(this.method)
@@ -94,6 +111,9 @@
 
                 switch (this.method) {
 
+                    case 1:
+                        sequence = this.bubbleSortDefault(values.slice())
+                        break;
                     case 2:
                         sequence = this.bubbleSort(values.slice());
                         break;
@@ -103,9 +123,54 @@
 
                 }
 
+
+
                 sequence.forEach((event, index) => {
                     setTimeout(() => { this.$store.commit(event); }, index * this.delay);
                 });
+            },
+            bubbleSortDefault(values)
+            {
+
+                let sequence = [],
+                    indexLastUnsorted = values.length - 1
+
+                for (let i = 0; i < values.length; i++)
+                {
+
+                    for (let j = 0; j < values.length; j++)
+                    {
+
+                        sequence.push({ type: 'activate', indexes: [j, j + 1] });
+
+                        this.steps++
+
+                        if (values[j] > values[j + 1])
+                        {
+                            let aux = values[j]
+
+                            values[j] = values[j + 1]
+                            values[j + 1] = aux
+
+                            console.log(`Passando: ${aux} para [${j + 1}] e ${values[j]} para [${j}]`)
+
+                            sequence.push({ type: 'swap', indexes: [j, j + 1] });
+                        }
+
+                        sequence.push({ type: 'deactivate', indexes: [j, j + 1] });
+                    }
+                    sequence.push({ type: 'lock', indexes: [indexLastUnsorted] });
+
+                }
+
+                this.vetor.final = values
+
+                let skipped = this.generateArray(0, indexLastUnsorted)
+
+                sequence.push({ type: 'lock', indexes: skipped });
+                sequence.push({ type: 'done' });
+
+                return sequence;
             },
             bubbleSort(values) {
                 let sequence = [];
@@ -124,6 +189,7 @@
                             let temp = values[i];
                             values[i] = values[i + 1];
                             values[i + 1] = temp;
+
                             swapped = true;
                             sequence.push({ type: 'swap', indexes: [i, i + 1] });
                         }
@@ -137,6 +203,8 @@
                     indexLastUnsorted--;
 
                 } while (swapped);
+
+                this.vetor.final = values
 
                 let skipped = this.generateArray(0, indexLastUnsorted + 1)
 
@@ -159,7 +227,8 @@
 
                     // Sempre até o penultimo para evitar comparações fora do vetor
 
-                    for (let j = 0; j <i  - 1; j++) {
+                    for (let j = 0; j < i - 1; j++) {
+
                         this.steps++
 
                         sequence.push({ type: 'activate', indexes: [j, j + 1] });
@@ -175,13 +244,16 @@
                             sequence.push({type: 'swap', indexes: [j, j + 1]});
 
                             // Tire o comentário abaixo para mostrar os this.steps
-                            //console.log(`Passando: ${temp} para [${j + 1}] e ${values[j]} para [${j}]`)
+                            console.log(`Passando: ${temp} para [${j + 1}] e ${values[j]} para [${j}]`)
 
-                        }
+                        } else break;
+
                         sequence.push({type: 'deactivate', indexes: [j, j + 1]});
                     }
 
-                    console.log(`Lockando: ${indexLastUnsorted}`)
+                    this.vetor.final = values
+
+                    //console.log(`Lockando: ${indexLastUnsorted}`)
                     sequence.push({ type: 'lock', indexes: [indexLastUnsorted] });
 
                     indexLastUnsorted--
