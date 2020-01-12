@@ -17,10 +17,14 @@
                 <option value="2">BubbleSort - 2</option>
                 <option value="3">BubbleSort - 3</option>
             </select>
+            <div class="group">
+                <label>Animar</label>
+                <input type="checkbox"  v-model="animate">
+            </div>
 
         </form>
 
-        <div class="cards">
+        <div class="cards" v-if="animate">
             <bubble-card
                     v-for="(card, index) in this.$store.state.cards"
                     :key="index"
@@ -64,6 +68,7 @@
         },
         data() {
             return {
+                animate: false,
                 items_count: 10,
                 delay: 10,
                 method: 1,
@@ -97,7 +102,7 @@
                     pool.splice(index, 1);
                 }
 
-                values = [10, 9, 8, 7, 6, 1, 2, 3, 4, 5];
+                //values = [10, 9, 8, 7, 6, 1, 2, 3, 4, 5];
 
                 this.vetor.inicial = values.slice();
 
@@ -123,8 +128,7 @@
 
                 }
 
-
-
+                if (this.animate)
                 sequence.forEach((event, index) => {
                     setTimeout(() => { this.$store.commit(event); }, index * this.delay);
                 });
